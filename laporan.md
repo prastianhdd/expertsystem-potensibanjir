@@ -19,7 +19,7 @@ Ketiga parameter diproses menggunakan **Mamdani Fuzzy Inference System** dengan 
 Input Crisp → Fuzzifikasi → Evaluasi Rules (MIN) → Agregasi (MAX) → Defuzzifikasi (Centroid) → Output Risiko (%)
 ```
 
-Output berupa persentase risiko banjir (0–100%), label linguistik (Very Low s/d Very High), serta peringatan jika >= 75%.
+Output berupa persentase risiko banjir (0–100%), label linguistik (Sangat Rendah s/d Sangat Tinggi), serta peringatan jika >= 75%.
 
 ---
 
@@ -32,10 +32,9 @@ Domain: [0, 210]
 
 | Himpunan | Tipe MF | Parameter | Keterangan |
 |---|---|---|---|
-| Banjir | Segitiga | [0, 0, 145] | Air sudah melampaui batas aman |
-| Siaga II | Trapesium | [120, 145, 160, 175] | Mendekati banjir, waspada tinggi |
-| Siaga I | Trapesium | [150, 170, 185, 200] | Mulai waspada |
-| Normal | Trapesium | [180, 200, 210, 210] | Aman, air masih jauh |
+| Bahaya | Trapesium | [0, 0, 100, 160] | Air tinggi, dekat/melewati batas aman |
+| Waspada | Trapesium | [110, 150, 170, 200] | Air menengah, mulai waspada |
+| Aman | Trapesium | [180, 200, 210, 210] | Air masih jauh, kondisi aman |
 
 > **Catatan:** Makin kecil nilai jarak = makin tinggi air = makin berbahaya.
 
@@ -55,10 +54,9 @@ Domain: [0, 150]
 
 | Himpunan | Tipe MF | Parameter | Keterangan |
 |---|---|---|---|
-| Lebat | Trapesium | [20, 40, 60, 80] | Hujan deras |
-| Sangat Lebat | Trapesium | [60, 80, 150, 150] | Hujan sangat deras |
-
-> **Catatan:** Jika curah hujan di bawah 20 mm, dianggap tidak lebat (tidak menjadi faktor penentu dalam rules).
+| Ringan | Trapesium | [0, 0, 40, 60] | Hujan kecil / tidak hujan |
+| Lebat | Trapesium | [40, 60, 90, 110] | Hujan deras |
+| Sangat Lebat | Trapesium | [90, 110, 150, 150] | Hujan sangat deras |
 
 ### 2.2 Variabel Output
 
@@ -67,66 +65,57 @@ Domain: [0, 100]
 
 | Himpunan | Tipe MF | Parameter |
 |---|---|---|
-| Very Low | Segitiga | [0, 0, 20] |
-| Low | Segitiga | [8, 25, 42] |
-| Moderate | Segitiga | [30, 50, 70] |
-| High | Segitiga | [55, 70, 85] |
-| Very High | Segitiga | [72, 100, 100] |
+| Rendah | Segitiga | [0, 0, 50] |
+| Sedang | Segitiga | [25, 50, 75] |
+| Tinggi | Segitiga | [50, 100, 100] |
 
 ---
 
-## 3. FUZZY RULES (29 Rules)
+## 3. FUZZY RULES (27 Rules)
 
-Rules menggunakan operasi **AND** (irisan / MIN) untuk menghubungkan kondisi-kondisi dalam IF.
+Rules menggunakan operasi **AND** (irisan / MIN) untuk menghubungkan kondisi-kondisi dalam IF. Setiap rule mengisi ketiga indikator (jarak air + kenaikan air + curah hujan), sehingga semua kombinasi 3 × 3 × 3 = 27 tercakup.
 
-### 3.1 Kelompok Banjir
-
-| No | Level Air | Kenaikan | Curah Hujan | THEN |
-|---|---|---|---|---|
-| R01 | Banjir | Naik | Sangat Lebat | Very High |
-| R02 | Banjir | Naik | Lebat | Very High |
-| R03 | Banjir | Naik | - | Very High |
-| R04 | Banjir | Stabil | Sangat Lebat | Very High |
-| R05 | Banjir | Stabil | - | Very High |
-| R06 | Banjir | Turun | Lebat | Very High |
-| R07 | Banjir | Turun | - | High |
-
-### 3.2 Kelompok Siaga II
+### 3.1 Kelompok Bahaya (air tinggi / dekat batas)
 
 | No | Level Air | Kenaikan | Curah Hujan | THEN |
 |---|---|---|---|---|
-| R08 | Siaga II | Naik | Sangat Lebat | Very High |
-| R09 | Siaga II | Naik | Lebat | Very High |
-| R10 | Siaga II | Naik | - | High |
-| R11 | Siaga II | Stabil | Lebat | High |
-| R12 | Siaga II | Stabil | - | High |
-| R13 | Siaga II | Turun | Lebat | High |
-| R14 | Siaga II | Turun | - | Moderate |
+| R01 | Bahaya | Naik | Sangat Lebat | Tinggi |
+| R02 | Bahaya | Naik | Lebat | Tinggi |
+| R03 | Bahaya | Naik | Ringan | Tinggi |
+| R04 | Bahaya | Stabil | Sangat Lebat | Tinggi |
+| R05 | Bahaya | Stabil | Lebat | Tinggi |
+| R06 | Bahaya | Stabil | Ringan | Tinggi |
+| R07 | Bahaya | Turun | Sangat Lebat | Tinggi |
+| R08 | Bahaya | Turun | Lebat | Sedang |
+| R09 | Bahaya | Turun | Ringan | Sedang |
 
-### 3.3 Kelompok Siaga I
-
-| No | Level Air | Kenaikan | Curah Hujan | THEN |
-|---|---|---|---|---|
-| R15 | Siaga I | Naik | Sangat Lebat | Very High |
-| R16 | Siaga I | Naik | Lebat | High |
-| R17 | Siaga I | Naik | - | Moderate |
-| R18 | Siaga I | Stabil | Lebat | Moderate |
-| R19 | Siaga I | Stabil | - | Low |
-| R20 | Siaga I | Turun | Sangat Lebat | Moderate |
-| R21 | Siaga I | Turun | Lebat | Low |
-| R22 | Siaga I | Turun | - | Low |
-
-### 3.4 Kelompok Normal
+### 3.2 Kelompok Waspada (air menengah)
 
 | No | Level Air | Kenaikan | Curah Hujan | THEN |
 |---|---|---|---|---|
-| R23 | Normal | Naik | Sangat Lebat | High |
-| R24 | Normal | Naik | Lebat | Moderate |
-| R25 | Normal | Naik | - | Low |
-| R26 | Normal | Stabil | Sangat Lebat | Low |
-| R27 | Normal | Stabil | Lebat | Low |
-| R28 | Normal | Stabil | - | Very Low |
-| R29 | Normal | Turun | - | Very Low |
+| R10 | Waspada | Naik | Sangat Lebat | Tinggi |
+| R11 | Waspada | Naik | Lebat | Tinggi |
+| R12 | Waspada | Naik | Ringan | Sedang |
+| R13 | Waspada | Stabil | Sangat Lebat | Sedang |
+| R14 | Waspada | Stabil | Lebat | Sedang |
+| R15 | Waspada | Stabil | Ringan | Rendah |
+| R16 | Waspada | Turun | Sangat Lebat | Sedang |
+| R17 | Waspada | Turun | Lebat | Rendah |
+| R18 | Waspada | Turun | Ringan | Rendah |
+
+### 3.3 Kelompok Aman (air masih jauh / normal)
+
+| No | Level Air | Kenaikan | Curah Hujan | THEN |
+|---|---|---|---|---|
+| R19 | Aman | Naik | Sangat Lebat | Tinggi |
+| R20 | Aman | Naik | Lebat | Sedang |
+| R21 | Aman | Naik | Ringan | Rendah |
+| R22 | Aman | Stabil | Sangat Lebat | Sedang |
+| R23 | Aman | Stabil | Lebat | Rendah |
+| R24 | Aman | Stabil | Ringan | Rendah |
+| R25 | Aman | Turun | Sangat Lebat | Rendah |
+| R26 | Aman | Turun | Lebat | Rendah |
+| R27 | Aman | Turun | Ringan | Rendah |
 
 ---
 
@@ -246,32 +235,37 @@ Output diagnosa meliputi:
 
 ## 6. CONTOH KASUS
 
-### Kasus 1: Banjir (jarak=130, naik=2, hujan=80)
+### Kasus 1: Air dekat batas (jarak=130, naik=2, hujan=80)
 ```
-Jarak Air:    130.0 cm   → Siaga II (μ=0.4) + Banjir (μ=0.1034)
+Jarak Air:    130.0 cm   → Bahaya (μ=0.5) + Waspada (μ=0.5)
 Kenaikan Air:   2.0 cm   → Stabil (μ=0.6) + Naik (μ=0.3333)
-Curah Hujan:   80.0 mm   → Sangat Lebat (μ=1.0)
+Curah Hujan:   80.0 mm   → Lebat (μ=1.0)
 
-Rule Aktif: R08 (Very High, clip=0.3333), R12 (High, clip=0.4)
-Risiko: 78.2% → Level: High
-Alert: !! PERINGATAN! Risiko >= 75%
+Rule Aktif: R05 (Tinggi, clip=0.5), R14 (Sedang, clip=0.5)
+Risiko: 65.7% → Level: Sedang
+Alert: OK (di bawah 75%)
 ```
 
 ### Kasus 2: Aman (jarak=200, kenaikan=0, hujan=5)
 ```
-Jarak Air:    200.0 cm   → Normal (μ=1.0)
+Jarak Air:    200.0 cm   → Aman (μ=1.0)
 Kenaikan Air:   0.0 cm   → Stabil (μ=1.0)
-Curah Hujan:    5.0 mm   → (tidak masuk himpunan manapun)
+Curah Hujan:    5.0 mm   → Ringan (μ=1.0)
 
-Rule Aktif: R28 (Very Low, clip=1.0)
-Risiko: 6.3% → Level: Very Low
+Rule Aktif: R24 (Rendah, clip=1.0)
+Risiko: 16.3% → Level: Rendah
 Alert: OK
 ```
 
-### Kasus 3: Ekstrem Banjir (jarak=10, naik=5, hujan=150)
+### Kasus 3: Ekstrem (jarak=20, naik=5, hujan=120)
 ```
-Risiko: 90.7% → Level: Very High
-Alert: !! PERINGATAN!
+Jarak Air:     20.0 cm   → Bahaya (μ=1.0)
+Kenaikan Air:   5.0 cm   → Naik (μ=0.8333)
+Curah Hujan:  120.0 mm   → Sangat Lebat (μ=1.0)
+
+Rule Aktif: R01 (Tinggi, clip=0.8333)
+Risiko: 83.2% → Level: Tinggi
+Alert: !! PERINGATAN! Risiko >= 75%
 ```
 
 ---
@@ -279,10 +273,10 @@ Alert: !! PERINGATAN!
 ## 7. KESIMPULAN
 
 1. **Sistem** mengubah sistem pakar teknisi laptop (forward chaining) menjadi sistem peringatan banjir (Mamdani fuzzy)
-2. **Knowledge Base** mencakup 3 variabel input dengan total 10 himpunan fuzzy, 1 variabel output dengan 5 himpunan, dan 29 rule inferensi
+2. **Knowledge Base** mencakup 3 variabel input dengan total 9 himpunan fuzzy (3 + 3 + 3), 1 variabel output dengan 3 himpunan, dan 27 rule inferensi
 3. **Metode Mamdani** diimplementasikan dengan 4 tahap: fuzzifikasi → implikasi MIN → agregasi MAX → defuzzifikasi centroid
 4. **Output** berupa persentase risiko (0–100%), label linguistik, dan peringatan otomatis jika ≥ threshold 75%
-5. **Saran penanganan** disediakan untuk 5 level risiko: Very Low, Low, Moderate, High, Very High
+5. **Saran penanganan** disediakan untuk 5 level risiko: Sangat Rendah, Rendah, Sedang, Tinggi, Sangat Tinggi
 6. **Simulasi acak** disediakan untuk demonstrasi tanpa data sensor real
 
 ---

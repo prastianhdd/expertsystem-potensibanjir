@@ -12,7 +12,6 @@ from rich import box
 
 console = Console()
 
-# Path ke base.yaml (di folder yang sama dengan file ini)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_YAML = os.path.join(BASE_DIR, "base.yaml")
 
@@ -38,7 +37,7 @@ def diagnose(gejala_dipilih):
     kerusakan_terdeteksi = {}
     rule_match = []
 
-    # Forward chaining: loop sampe fakta gak bertambah
+    # Forward chaining
     while True:
         ada_fakta_baru = False
 
@@ -46,11 +45,9 @@ def diagnose(gejala_dipilih):
             kondisi = rule["if"]
             kesimpulan = rule["then"]
 
-            # Cek apa rule ini udah pernah diproses
             if rule["id"] in rule_match:
                 continue
 
-            # Cek apa semua kondisi ada di fakta saat ini
             kondisi_terpenuhi = True
             for g in kondisi:
                 if g not in fakta:
@@ -92,7 +89,6 @@ def diagnose(gejala_dipilih):
 def cetak_hasil(data):
     """Tampilkan hasil diagnosa ke layar pake rich (chalk versi python)"""
 
-    # ---- GEJALA YANG DIPILIH ----
     console.print()
     gejala_panel = Panel(
         "\n".join([f"  [yellow]{g['kode']}[/]  [white]{g['nama']}[/]" for g in data["gejala_input"]]),
@@ -102,7 +98,6 @@ def cetak_hasil(data):
     )
     console.print(gejala_panel)
 
-    # ---- RULE YANG COCOK ----
     console.print()
     if data["rule_match"]:
         rule_text = ""
@@ -123,10 +118,8 @@ def cetak_hasil(data):
         )
     console.print(rule_panel)
 
-    # ---- HASIL DIAGNOSA ----
     console.print()
     if data["hasil_kerusakan"]:
-        # Pake tabel biar rapi
         table = Table(
             title="[bold green]HASIL DIAGNOSA[/]",
             box=box.ROUNDED,

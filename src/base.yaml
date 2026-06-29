@@ -1,12 +1,6 @@
-# ==================================================
-# SISTEM PAKAR PERINGATAN BANJIR - Knowledge Base
-# Metode: Mamdani Fuzzy Inference System
-# Referensi: Tuah, Lestari, Parhusip (2025)
-# ==================================================
-
 sistem: "Sistem Pakar Peringatan Banjir"
 metode: "Mamdani Fuzzy Inference System"
-threshold_alert: 75  # %
+threshold_alert: 75 
 
 variabel_input:
   jarak_air:
@@ -14,16 +8,13 @@ variabel_input:
     domain: [0, 210]
     keterangan: "Makin kecil nilainya, makin tinggi air (makin bahaya)"
     himpunan:
-      Banjir:
-        tipe: segitiga
-        params: [0, 0, 145]
-      Siaga II:
+      Bahaya:
         tipe: trapesium
-        params: [120, 145, 160, 175]
-      Siaga I:
+        params: [0, 0, 100, 160]
+      Waspada:
         tipe: trapesium
-        params: [150, 170, 185, 200]
-      Normal:
+        params: [110, 150, 170, 200]
+      Aman:
         tipe: trapesium
         params: [180, 200, 210, 210]
 
@@ -45,143 +36,119 @@ variabel_input:
   curah_hujan:
     label: "Curah Hujan (mm)"
     domain: [0, 150]
-    keterangan: "0 = tidak hujan, >60 = sangat lebat"
+    keterangan: "Ringan = hujan kecil, Lebat = deras, Sangat Lebat = sangat deras"
     himpunan:
+      Ringan:
+        tipe: trapesium
+        params: [0, 0, 40, 60]
       Lebat:
         tipe: trapesium
-        params: [20, 40, 60, 80]
+        params: [40, 60, 90, 110]
       Sangat Lebat:
         tipe: trapesium
-        params: [60, 80, 150, 150]
+        params: [90, 110, 150, 150]
 
 variabel_output:
   risiko_banjir:
     label: "Risiko Banjir (%)"
     domain: [0, 100]
     himpunan:
-      Very Low:
+      Rendah:
         tipe: segitiga
-        params: [0, 0, 20]
-      Low:
+        params: [0, 0, 50]
+      Sedang:
         tipe: segitiga
-        params: [8, 25, 42]
-      Moderate:
+        params: [25, 50, 75]
+      Tinggi:
         tipe: segitiga
-        params: [30, 50, 70]
-      High:
-        tipe: segitiga
-        params: [55, 70, 85]
-      Very High:
-        tipe: segitiga
-        params: [72, 100, 100]
+        params: [50, 100, 100]
 
 rules:
-  # ============================================
-  # KELOMPOK BANJIR (air sudah di atas batas)
-  # ============================================
   - id: R01
-    if: {jarak_air: Banjir, kenaikan_air: Naik, curah_hujan: Sangat Lebat}
-    then: Very High
+    if: {jarak_air: Bahaya, kenaikan_air: Naik, curah_hujan: Sangat Lebat}
+    then: Tinggi
   - id: R02
-    if: {jarak_air: Banjir, kenaikan_air: Naik, curah_hujan: Lebat}
-    then: Very High
+    if: {jarak_air: Bahaya, kenaikan_air: Naik, curah_hujan: Lebat}
+    then: Tinggi
   - id: R03
-    if: {jarak_air: Banjir, kenaikan_air: Naik}
-    then: Very High
+    if: {jarak_air: Bahaya, kenaikan_air: Naik, curah_hujan: Ringan}
+    then: Tinggi
   - id: R04
-    if: {jarak_air: Banjir, kenaikan_air: Stabil, curah_hujan: Sangat Lebat}
-    then: Very High
+    if: {jarak_air: Bahaya, kenaikan_air: Stabil, curah_hujan: Sangat Lebat}
+    then: Tinggi
   - id: R05
-    if: {jarak_air: Banjir, kenaikan_air: Stabil}
-    then: Very High
+    if: {jarak_air: Bahaya, kenaikan_air: Stabil, curah_hujan: Lebat}
+    then: Tinggi
   - id: R06
-    if: {jarak_air: Banjir, kenaikan_air: Turun, curah_hujan: Lebat}
-    then: Very High
+    if: {jarak_air: Bahaya, kenaikan_air: Stabil, curah_hujan: Ringan}
+    then: Tinggi
   - id: R07
-    if: {jarak_air: Banjir, kenaikan_air: Turun}
-    then: High
-
-  # ============================================
-  # KELOMPOK SIAGA II
-  # ============================================
+    if: {jarak_air: Bahaya, kenaikan_air: Turun, curah_hujan: Sangat Lebat}
+    then: Tinggi
   - id: R08
-    if: {jarak_air: Siaga II, kenaikan_air: Naik, curah_hujan: Sangat Lebat}
-    then: Very High
+    if: {jarak_air: Bahaya, kenaikan_air: Turun, curah_hujan: Lebat}
+    then: Sedang
   - id: R09
-    if: {jarak_air: Siaga II, kenaikan_air: Naik, curah_hujan: Lebat}
-    then: Very High
+    if: {jarak_air: Bahaya, kenaikan_air: Turun, curah_hujan: Ringan}
+    then: Sedang
+
   - id: R10
-    if: {jarak_air: Siaga II, kenaikan_air: Naik}
-    then: High
+    if: {jarak_air: Waspada, kenaikan_air: Naik, curah_hujan: Sangat Lebat}
+    then: Tinggi
   - id: R11
-    if: {jarak_air: Siaga II, kenaikan_air: Stabil, curah_hujan: Lebat}
-    then: High
+    if: {jarak_air: Waspada, kenaikan_air: Naik, curah_hujan: Lebat}
+    then: Tinggi
   - id: R12
-    if: {jarak_air: Siaga II, kenaikan_air: Stabil}
-    then: High
+    if: {jarak_air: Waspada, kenaikan_air: Naik, curah_hujan: Ringan}
+    then: Sedang
   - id: R13
-    if: {jarak_air: Siaga II, kenaikan_air: Turun, curah_hujan: Lebat}
-    then: High
+    if: {jarak_air: Waspada, kenaikan_air: Stabil, curah_hujan: Sangat Lebat}
+    then: Sedang
   - id: R14
-    if: {jarak_air: Siaga II, kenaikan_air: Turun}
-    then: Moderate
-
-  # ============================================
-  # KELOMPOK SIAGA I
-  # ============================================
+    if: {jarak_air: Waspada, kenaikan_air: Stabil, curah_hujan: Lebat}
+    then: Sedang
   - id: R15
-    if: {jarak_air: Siaga I, kenaikan_air: Naik, curah_hujan: Sangat Lebat}
-    then: Very High
+    if: {jarak_air: Waspada, kenaikan_air: Stabil, curah_hujan: Ringan}
+    then: Rendah
   - id: R16
-    if: {jarak_air: Siaga I, kenaikan_air: Naik, curah_hujan: Lebat}
-    then: High
+    if: {jarak_air: Waspada, kenaikan_air: Turun, curah_hujan: Sangat Lebat}
+    then: Sedang
   - id: R17
-    if: {jarak_air: Siaga I, kenaikan_air: Naik}
-    then: Moderate
+    if: {jarak_air: Waspada, kenaikan_air: Turun, curah_hujan: Lebat}
+    then: Rendah
   - id: R18
-    if: {jarak_air: Siaga I, kenaikan_air: Stabil, curah_hujan: Lebat}
-    then: Moderate
-  - id: R19
-    if: {jarak_air: Siaga I, kenaikan_air: Stabil}
-    then: Low
-  - id: R20
-    if: {jarak_air: Siaga I, kenaikan_air: Turun, curah_hujan: Sangat Lebat}
-    then: Moderate
-  - id: R21
-    if: {jarak_air: Siaga I, kenaikan_air: Turun, curah_hujan: Lebat}
-    then: Low
-  - id: R22
-    if: {jarak_air: Siaga I, kenaikan_air: Turun}
-    then: Low
+    if: {jarak_air: Waspada, kenaikan_air: Turun, curah_hujan: Ringan}
+    then: Rendah
 
-  # ============================================
-  # KELOMPOK NORMAL
-  # ============================================
+  - id: R19
+    if: {jarak_air: Aman, kenaikan_air: Naik, curah_hujan: Sangat Lebat}
+    then: Tinggi
+  - id: R20
+    if: {jarak_air: Aman, kenaikan_air: Naik, curah_hujan: Lebat}
+    then: Sedang
+  - id: R21
+    if: {jarak_air: Aman, kenaikan_air: Naik, curah_hujan: Ringan}
+    then: Rendah
+  - id: R22
+    if: {jarak_air: Aman, kenaikan_air: Stabil, curah_hujan: Sangat Lebat}
+    then: Sedang
   - id: R23
-    if: {jarak_air: Normal, kenaikan_air: Naik, curah_hujan: Sangat Lebat}
-    then: High
+    if: {jarak_air: Aman, kenaikan_air: Stabil, curah_hujan: Lebat}
+    then: Rendah
   - id: R24
-    if: {jarak_air: Normal, kenaikan_air: Naik, curah_hujan: Lebat}
-    then: Moderate
+    if: {jarak_air: Aman, kenaikan_air: Stabil, curah_hujan: Ringan}
+    then: Rendah
   - id: R25
-    if: {jarak_air: Normal, kenaikan_air: Naik}
-    then: Low
+    if: {jarak_air: Aman, kenaikan_air: Turun, curah_hujan: Sangat Lebat}
+    then: Rendah
   - id: R26
-    if: {jarak_air: Normal, kenaikan_air: Stabil, curah_hujan: Sangat Lebat}
-    then: Low
+    if: {jarak_air: Aman, kenaikan_air: Turun, curah_hujan: Lebat}
+    then: Rendah
   - id: R27
-    if: {jarak_air: Normal, kenaikan_air: Stabil, curah_hujan: Lebat}
-    then: Low
-  - id: R28
-    if: {jarak_air: Normal, kenaikan_air: Stabil}
-    then: Very Low
-  - id: R29
-    if: {jarak_air: Normal, kenaikan_air: Turun}
-    then: Very Low
+    if: {jarak_air: Aman, kenaikan_air: Turun, curah_hujan: Ringan}
+    then: Rendah
 
 saran:
-  Very Low: "Tidak ada potensi banjir. Kondisi aman."
-  Low: "Potensi banjir rendah. Pantau kondisi cuaca secara berkala."
-  Moderate: "Waspada potensi banjir. Siapkan langkah antisipasi dan pantau terus."
-  High: "Siaga banjir! Pantau terus ketinggian air dan siapkan rencana evakuasi."
-  Very High: "BAHAYA BANJIR! Segera evakuasi ke tempat aman."
+  Rendah: "Potensi banjir rendah. Pantau kondisi cuaca secara berkala."
+  Sedang: "Waspada potensi banjir. Siapkan langkah antisipasi dan pantau terus."
+  Tinggi: "BAHAYA BANJIR! Segera evakuasi ke tempat aman."

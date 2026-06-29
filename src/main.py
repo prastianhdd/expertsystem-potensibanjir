@@ -52,10 +52,6 @@ def menu_utama():
     return pilihan
 
 
-# ============================================================
-# MENU 1: DIAGNOSA
-# ============================================================
-
 def diagnosa():
     """Input 3 parameter -> tampilkan hasil fuzzy lengkap"""
     console.clear()
@@ -105,7 +101,6 @@ def cetak_hasil(hasil):
 
     d = hasil["input"]
 
-    # ---- INPUT CRISP ----
     table_in = Table(title="[bold cyan]INPUT PARAMETER[/]", box=box.ROUNDED, header_style="bold cyan")
     table_in.add_column("Parameter", style="yellow")
     table_in.add_column("Nilai", style="bold white")
@@ -115,7 +110,6 @@ def cetak_hasil(hasil):
     table_in.add_row("Curah Hujan", f"{d['curah_hujan']['nilai']} mm", d['curah_hujan']['label'])
     console.print(table_in)
 
-    # ---- FUZZIFIKASI DETAIL ----
     console.print()
     for var_key, var_data in d.items():
         label_var = kb["variabel_input"][var_key]["label"] if var_key in kb["variabel_input"] else var_key
@@ -134,7 +128,6 @@ def cetak_hasil(hasil):
         else:
             console.print(f"[dim]{label_var}: tidak ada himpunan aktif[/]")
 
-    # ---- RULE AKTIF ----
     console.print()
     if hasil["rule_aktif"]:
         table_rules = Table(
@@ -158,27 +151,18 @@ def cetak_hasil(hasil):
         )
         console.print(panel)
 
-    # ---- OUTPUT AGREGASI (grafik ASCII sederhana) ----
-    console.print()
-    cetak_grafik_fuzzy(hasil["agregasi"])
-
-    # ---- RISIKO FINAL ----
     console.print()
     risiko = hasil["risiko"]
     label = hasil["label_risiko"]
     threshold = hasil["threshold"]
     alert = hasil["alert"]
 
-    # Warna label sesuai level
     warna = {
-        "Very Low": "green",
-        "Low": "cyan",
-        "Moderate": "yellow",
-        "High": "red",
-        "Very High": "bold red"
+        "Rendah": "green",
+        "Sedang": "yellow",
+        "Tinggi": "bold red"
     }.get(label, "white")
 
-    # Progress bar
     bar_len = 40
     filled = int((risiko / 100) * bar_len)
     bar = "#" * filled + "." * (bar_len - filled)
@@ -187,12 +171,10 @@ def cetak_hasil(hasil):
     console.print(f"  [{warna}]{bar}[/]  [bold]{risiko:.1f}%[/]")
     console.print(f"  Level: [{warna}]{label}[/]")
 
-    # Threshold line
     thresh_pos = int((threshold / 100) * bar_len)
     thresh_line = " " * thresh_pos + "^"
     console.print(f"  [dim]{thresh_line} threshold {threshold}%[/]")
 
-    # Alert
     if alert:
         alert_panel = Panel(
             f"[bold red]!! PERINGATAN! Risiko banjir >= {threshold}%[/]\n[white]{hasil['saran']}[/]",
@@ -208,42 +190,12 @@ def cetak_hasil(hasil):
     console.print(alert_panel)
 
 
-def cetak_grafik_fuzzy(agregat):
-    """Tampilkan grafik ASCII fungsi keanggotaan agregat hasil"""
-    console.print("[bold]AGREGASI OUTPUT (Fungsi Keanggotaan)[/]")
-    if not agregat or max(agregat.values()) == 0:
-        console.print("  [dim]Tidak ada area aktif[/]")
-        return
-
-    max_mu = max(agregat.values())
-    chart_h = 6
-    points = list(agregat.items())
-    step = max(1, len(points) // 50)
-
-    for row in range(chart_h, -1, -1):
-        thresh = row / chart_h * max_mu
-        line = ""
-        for i in range(0, len(points), step):
-            _, mu = points[i]
-            line += "#" if mu >= thresh else " "
-        console.print(f"  {line}")
-
-    console.print(f"  0{' ' * (len(line) - 4)}100")
-    console.print(f"  [dim]|{'-' * (len(line) - 2)}|[/]")
-    console.print()
-
-
-# ============================================================
-# MENU 2: LIHAT VARIABEL
-# ============================================================
-
 def lihat_variabel():
     """Tampilkan semua variabel fuzzy + membership function"""
     console.clear()
     header()
     console.print()
 
-    # Input variables
     console.print("[bold cyan]VARIABEL INPUT[/]\n")
     for var_name, var_data in kb["variabel_input"].items():
         domain = var_data["domain"]
@@ -261,7 +213,6 @@ def lihat_variabel():
         console.print(table)
         console.print()
 
-    # Output variable
     console.print("[bold red]VARIABEL OUTPUT[/]\n")
     out_data = kb["variabel_output"]["risiko_banjir"]
     domain = out_data["domain"]
@@ -279,12 +230,8 @@ def lihat_variabel():
     console.print()
 
 
-# ============================================================
-# MENU 3: LIHAT RULES
-# ============================================================
-
 def lihat_rules():
-    """Tampilkan semua 29 rule fuzzy"""
+    """Tampilkan semua 27 rule fuzzy"""
     console.clear()
     header()
     console.print()
@@ -314,10 +261,6 @@ def lihat_rules():
     console.print()
 
 
-# ============================================================
-# MENU 4: AMBANG & SARAN
-# ============================================================
-
 def lihat_ambang():
     """Tampilkan threshold alert dan saran tiap level risiko"""
     console.clear()
@@ -336,11 +279,9 @@ def lihat_ambang():
 
     saran = kb.get("saran", {})
     warna = {
-        "Very Low": "green",
-        "Low": "cyan",
-        "Moderate": "yellow",
-        "High": "red",
-        "Very High": "bold red"
+        "Rendah": "green",
+        "Sedang": "yellow",
+        "Tinggi": "bold red"
     }
 
     table = Table(
@@ -352,7 +293,7 @@ def lihat_ambang():
     table.add_column("Level", style="bold")
     table.add_column("Saran Penanganan", style="white")
 
-    for level in ["Very Low", "Low", "Moderate", "High", "Very High"]:
+    for level in ["Rendah", "Sedang", "Tinggi"]:
         w = warna.get(level, "white")
         text = saran.get(level, "-")
         table.add_row(f"[{w}]{level}[/]", text)
@@ -360,10 +301,6 @@ def lihat_ambang():
     console.print(table)
     console.print()
 
-
-# ============================================================
-# MENU 5: SIMULASI
-# ============================================================
 
 def simulasi():
     """Generate random input, diagnosa, repeat"""
@@ -393,10 +330,6 @@ def simulasi():
     console.print()
     console.print("[green]Simulasi selesai![/]")
 
-
-# ============================================================
-# MAIN LOOP
-# ============================================================
 
 def main():
     while True:

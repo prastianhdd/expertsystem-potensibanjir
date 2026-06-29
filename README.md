@@ -6,7 +6,7 @@ Sistem pakar berbasis CLI untuk mendiagnosis potensi banjir menggunakan **Mamdan
 |---|---|
 | Metode | Mamdani Fuzzy (Fuzzify → MIN Implication → MAX Aggregation → Centroid Defuzzify) |
 | Input | 3 parameter lingkungan |
-| Output | Risiko banjir 0–100% + 5 level linguistik |
+| Output | Risiko banjir 0–100% + 3 level linguistik |
 | Threshold peringatan | ≥ 75% |
 | Total rules | 29 |
 | Stack | Python 3 + YAML + Rich |
@@ -54,7 +54,7 @@ Input Crisp (jarak, kenaikan, curah hujan)
 
 | Variabel | Domain | Himpunan |
 |---|---|---|
-| Jarak Air (cm) | [0, 210] | Banjir / Siaga II / Siaga I / Normal |
+| Jarak Air (cm) | [0, 210] | Bahaya / Waspada / Aman |
 | Kenaikan Air (cm/mnt) | [-6, 6] | Turun / Stabil / Naik |
 | Curah Hujan (mm) | [0, 150] | (tidak lebat) / Lebat / Sangat Lebat |
 
@@ -62,9 +62,9 @@ Input Crisp (jarak, kenaikan, curah hujan)
 
 | Variabel | Domain | Himpunan |
 |---|---|---|
-| Risiko Banjir (%) | [0, 100] | Very Low / Low / Moderate / High / Very High |
+| Risiko Banjir (%) | [0, 100] | Rendah / Sedang / Tinggi |
 
-### Rules (29)
+### Rules (18)
 
 Tabel lengkap rule ada di menu `Lihat Semua Rule` atau file `laporan.md`.
 
@@ -128,7 +128,7 @@ Input:
   Kenaikan Air:    2 cm/mnt
   Curah Hujan:    80 mm
 
-→ Risiko: 78.2% — Level: High
+→ Risiko: 78.2% — Level: Tinggi
 → PERINGATAN! Risiko ≥ 75%
 → Saran: Siaga banjir! Pantau terus ketinggian air...
 ```
@@ -141,7 +141,7 @@ Input:
   Kenaikan Air:    0 cm/mnt
   Curah Hujan:     5 mm
 
-→ Risiko: 6.3% — Level: Very Low
+→ Risiko: 6.3% — Level: Sangat Rendah
 → Kondisi aman.
 ```
 

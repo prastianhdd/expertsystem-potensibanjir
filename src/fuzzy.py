@@ -14,11 +14,6 @@ def load_knowledge_base():
     with open(BASE_YAML, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
-
-# ============================================================
-# FUZZY SET — membership function triangular / trapezoidal
-# ============================================================
-
 class FuzzySet:
     def __init__(self, nama, tipe, params):
         self.nama = nama
@@ -59,11 +54,6 @@ class FuzzySet:
             return (d - x) / (d - c)
         return 0.0
 
-
-# ============================================================
-# MAMDANI FIS ENGINE
-# ============================================================
-
 class MamdaniFIS:
     def __init__(self):
         self.kb = load_knowledge_base()
@@ -71,7 +61,6 @@ class MamdaniFIS:
 
     def _build_sets(self):
         """Convert YAML definitions into FuzzySet objects"""
-        # Input sets: { nama_var: { label_himpunan: FuzzySet } }
         self.input_sets = {}
         for var_name, var_data in self.kb["variabel_input"].items():
             self.input_sets[var_name] = {}
@@ -80,7 +69,6 @@ class MamdaniFIS:
                     set_name, set_data["tipe"], set_data["params"]
                 )
 
-        # Output sets
         self.output_sets = {}
         out_data = self.kb["variabel_output"]["risiko_banjir"]
         for set_name, set_data in out_data["himpunan"].items():
@@ -97,9 +85,6 @@ class MamdaniFIS:
             return max(domain[0], min(domain[1], nilai))
         return nilai
 
-    # ----------------------------------------------------------
-    # LANTAI 1: FUZZIFIKASI
-    # ----------------------------------------------------------
     def fuzzify(self, var_name, nilai):
         """Hitung μ untuk tiap himpunan di satu variabel input"""
         crisp = self._clamp(var_name, nilai)
@@ -111,9 +96,6 @@ class MamdaniFIS:
                 hasil[set_name] = round(mu, 4)
         return hasil, crisp
 
-    # ----------------------------------------------------------
-    # LANTAI 2: EVALUASI RULES (MIN implication / clipping)
-    # ----------------------------------------------------------
     def evaluasi_rules(self, fuzzified):
         """
         Untuk tiap rule:
@@ -144,9 +126,6 @@ class MamdaniFIS:
 
         return hasil
 
-    # ----------------------------------------------------------
-    # LANTAI 3: AGREGASI (MAX dari semua clipping)
-    # ----------------------------------------------------------
     def agregasi(self, rule_results):
         """
         Agregasi semua output clipping -> fungsi keanggotaan agregat.
@@ -165,9 +144,6 @@ class MamdaniFIS:
 
         return agregat
 
-    # ----------------------------------------------------------
-    # LANTAI 4: DEFUZZIFIKASI (Centroid / Center of Area)
-    # ----------------------------------------------------------
     def defuzzify(self, agregat):
         """
         Centroid: Risiko = Σ(xi * μ(xi)) / Σ(μ(xi))
@@ -186,7 +162,7 @@ class MamdaniFIS:
 
     def label_risiko(self, persen):
         """Cari label risiko — pilih yg derajat keanggotaan tertinggi"""
-        best_label = "Very Low"
+        best_label = "Rendah"
         best_mu = 0.0
         for set_name, fs in self.output_sets.items():
             mu = fs.derajat(persen)
@@ -200,15 +176,12 @@ class MamdaniFIS:
         saran = self.kb.get("saran", {})
         return saran.get(label, "Tidak ada saran.")
 
-    # ----------------------------------------------------------
-    # DIAGNOSA LENGKAP
-    # ----------------------------------------------------------
     def diagnosa(self, jarak_air, kenaikan_air, curah_hujan):
         """
         Pipeline lengkap: fuzzify -> rules -> agregasi -> defuzzify
         Return dict detail.
         """
-        # 1. FUZZIFIKASI
+        # FUZZIFIKASI
         fuzz_jarak, crisp_jarak = self.fuzzify("jarak_air", jarak_air)
         fuzz_kenaikan, crisp_kenaikan = self.fuzzify("kenaikan_air", kenaikan_air)
         fuzz_hujan, crisp_hujan = self.fuzzify("curah_hujan", curah_hujan)
@@ -219,21 +192,18 @@ class MamdaniFIS:
             "curah_hujan": fuzz_hujan,
         }
 
-        # 2. EVALUASI RULES
+        # EVALUASI RULES
         rule_results = self.evaluasi_rules(fuzzified)
         rule_results_dedup = self._dedup_rules(rule_results)
-
-        # 3. AGREGASI
         agregat = self.agregasi(rule_results_dedup)
 
-        # 4. DEFUZZIFIKASI
+        # DEFUZZIFIKASI
         risiko = self.defuzzify(agregat)
         label = self.label_risiko(risiko)
         saran = self.cari_saran(label)
         threshold = self.kb.get("threshold_alert", 75)
         alert = risiko >= threshold
 
-        # Info tambahan: label dari tiap input
         label_jarak = max(fuzz_jarak, key=fuzz_jarak.get) if fuzz_jarak else "-"
         label_kenaikan = max(fuzz_kenaikan, key=fuzz_kenaikan.get) if fuzz_kenaikan else "-"
         label_hujan = max(fuzz_hujan, key=fuzz_hujan.get) if fuzz_hujan else "-"
@@ -262,16 +232,12 @@ class MamdaniFIS:
         rule_results: list of (rule_id, label, clip)
         Return: list of (rule_id, label, clip) — dedup by label (keep max clip)
         """
-        best = {}  # label -> (rule_id, clip)
+        best = {}  
         for rid, label, clip in rule_results:
             if label not in best or clip > best[label][1]:
                 best[label] = (rid, clip)
         return [(rid, label, clip) for label, (rid, clip) in best.items()]
 
-
-# ============================================================
-# TEST / DEMO
-# ============================================================
 
 if __name__ == "__main__":
     fis = MamdaniFIS()
